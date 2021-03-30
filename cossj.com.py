@@ -63,7 +63,7 @@ def get_single_imgs(url):
     title = soup.find('title').text
     page = {'title':title, 'imgs':[]}
     for i in p:
-        page['imgs'].append(i['data-src'])
+        page['imgs'].append(i['data-src'].replace("https://images.weserv.nl/?url=", ""))
     return page
 
 
