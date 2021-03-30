@@ -63,10 +63,11 @@ def get_single_imgs(url):
     title = soup.find('title').text
     page = {'title':title, 'imgs':[]}
     for i in p:
-        page['imgs'].append(i['data-src'].replace("https://images.weserv.nl/?url=", ""))
+        page['imgs'].append(i['data-src'].replace("https://images.weserv.nl/?url=https://pic.24cos.com", "https://pic.lovecos.net"))
     return page
 
 
+semaphore = threading.Semaphore(3)
 def saveImages(num, title, imgs):
     imgPath = os.path.abspath('./')+'/cos'+num+'/'+title+'/'
 #    t = os.listdir(imgPath)
@@ -76,23 +77,26 @@ def saveImages(num, title, imgs):
     folder = mkdir(imgPath)
     count = 0
     print('开始下载:'+title+',共计图片:'+str(len(imgs)) +'张')
-    for index, img in enumerate(imgs):
-        try:
-            html = requests.get(img, headers=headers, timeout=30)
-            filename = folder+'/'+str(index+1)+'.jpg'
-            with open(filename, 'wb') as handle:
-                handle.write(html.content)
-            count +=1
-        except Exception as e:
-            print(e)
-            continue
-    print('Finisded! '+title+'结束,共计下载'+str(count)+'张图片')
+    num = 5
+    with semaphore:
+        while num:
+            for index, img in enumerate(imgs):
+                try:
+                    html = requests.get(img, headers=headers, timeout=30)
+                    filename = folder+'/'+str(index+1)+'.jpg'
+                    with open(filename, 'wb') as handle:
+                        handle.write(html.content)
+                    count +=1
+                except Exception as e:
+                    print(e)
+                    continue
+            print('Finisded! '+title+'结束,共计下载'+str(count)+'张图片')
 
 def downTask():
     num = input("选择下载:\n1.动漫游戏\n2.古风制服\n3.日本和风\n")
-    urls = get_urls(int(num))
-    thread_list = []
+    urls = get_urls(int(num)) 
     for url in urls:
+        thread_list = []
         url='https://cos.cossj.com/'+url
         signle = get_single_imgs(url)
         try:
@@ -104,6 +108,8 @@ def downTask():
             sys.exit() 
     for x in thread_list:
         x.join()
+       
+
 
 if __name__=="__main__":
     downTask()
